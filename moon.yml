@@ -1,0 +1,9 @@
+language: bash
+
+tasks:
+  fail:
+    command: './fail.sh'
+    toolchain: system
+    options:
+      cache: false
+      runFromWorkspaceRoot: true
