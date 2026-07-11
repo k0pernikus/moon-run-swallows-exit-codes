@@ -1,7 +1,7 @@
 language: bash
 
 tasks:
-  fail:
+  fail-with-random-allowed-to-fail-codes:
     command: './fail.sh'
     toolchain: system
     options:

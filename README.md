@@ -1,33 +1,39 @@
 # moon run swallows a task's exit code
 
 `moon run <task>` returns exit code `1` for any task failure — the task's real exit code is
-discarded.
+discarded. A CI allow-list keyed on the real code (e.g. GitLab `allow_failure: exit_codes`) is
+therefore defeated: the code it would match never reaches CI.
 
 ## Reproduce
+
+`fail.sh` exits with a random code from `70`, `80`, `90`. The task wraps it; the CI job allow-lists
+all three. moon collapses every one to `1`, so the allow-list never matches and the job fails red
+instead of passing.
 
 ```
 $ mise install                 # installs the pinned moon 2.4.2
 $ ./fail.sh; echo "exit: $?"
-exit: 42
+fail.sh exiting with code 80
+exit: 80
 
-$ moon run demo:fail; echo "exit: $?"
-  × Task demo:fail failed to run.
-  ╰─▶ Process ./fail.sh failed: exit code 42
+$ moon run demo:fail-with-random-allowed-to-fail-codes; echo "exit: $?"
+  × Task demo:fail-with-random-allowed-to-fail-codes failed to run.
+  ╰─▶ Process ./fail.sh failed: exit code 80
 exit: 1
 ```
 
-The task exits `42`; run directly it returns `42`; through `moon run` it returns `1`. moon's own
-diagnostic prints the real code, yet the process exit is `1`.
+Run directly, the script returns its real code (`70`/`80`/`90`); through `moon run` it is always
+`1`.
 
-## Why it matters
+## The CI signal
 
-A CI system selects a job status from the exit code — for example GitLab
-`allow_failure: exit_codes: [N]` marks a job "passed with warnings" on exactly code `N`. A task
-runner wrapping the command must propagate that code; because `moon run` collapses every failure to
-`1`, a specific code cannot be distinguished from a generic failure.
+`.github/workflows/repro.yml` allow-lists `70/80/90` and fails on any other code. Because moon
+returns `1`, the job is **red while the bug is present**; if moon propagated the real code it would
+match the allow-list and the job would pass — so a future green run means the bug is fixed.
 
 ## Layout
 
-- `fail.sh` — exits `42`.
-- `moon.yml`, `.moon/` — a `demo:fail` task wrapping it.
+- `fail.sh` — exits a random `70`/`80`/`90`.
+- `moon.yml`, `.moon/` — the `demo:fail-with-random-allowed-to-fail-codes` task wrapping it.
 - `mise.toml` — pins moon `2.4.2`.
+- `.github/workflows/repro.yml` — the red-on-bug CI signal.

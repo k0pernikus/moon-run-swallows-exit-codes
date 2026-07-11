@@ -1,0 +1,28 @@
+name: repro
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  exit-code:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - run: moon --version
+      - name: allow-list 70/80/90; moon collapses them to 1, defeating the allow-list
+        run: |
+          set +e
+          moon run demo:fail-with-random-allowed-to-fail-codes
+          code=$?
+          set -e
+          echo "moon run returned exit code: ${code}"
+          case "${code}" in
+            70 | 80 | 90)
+              echo "exit ${code} is allow-listed -> job passes (moon propagated the real code; bug fixed)"
+              ;;
+            *)
+              echo "::error::the task exits one of 70/80/90 (all allow-listed), but moon collapsed it to ${code}; the allow-list never matches and the job fails"
+              exit 1
+              ;;
+          esac
