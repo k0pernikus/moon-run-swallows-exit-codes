@@ -10,9 +10,4 @@ jobs:
       - uses: actions/checkout@v4
       - uses: jdx/mise-action@v2
       - run: moon --version
-      - name: allow-list 70/80/90 as tolerated — moon returns 1 so the allow-list never matches, job fails
-        run: |
-          set +e
-          moon run demo:fail-with-random-allowed-to-fail-codes
-          code=$?
-          case $code in 70 | 80 | 90) ;; *) exit "$code" ;; esac
+      - run: moon run demo:fail-with-random-allowed-to-fail-codes

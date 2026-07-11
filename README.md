@@ -27,13 +27,13 @@ Run directly, the script returns its real code (`70`/`80`/`90`); through `moon r
 
 ## The CI signal
 
-`.github/workflows/repro.yml` allow-lists `70/80/90` and fails on any other code. Because moon
-returns `1`, the job is **red while the bug is present**; if moon propagated the real code it would
-match the allow-list and the job would pass — so a future green run means the bug is fixed.
+`.github/workflows/repro.yml` runs the task. `fail.sh` exits `70`/`80`/`90`, yet `moon run` returns
+`1` — the job fails on moon's collapsed `1`, never the script's real code. The log shows both: the
+real code in moon's `Process ./fail.sh failed: exit code <N>` line, `1` as the step exit.
 
 ## Layout
 
 - `fail.sh` — exits a random `70`/`80`/`90`.
 - `moon.yml`, `.moon/` — the `demo:fail-with-random-allowed-to-fail-codes` task wrapping it.
 - `mise.toml` — pins moon `2.4.2`.
-- `.github/workflows/repro.yml` — the red-on-bug CI signal.
+- `.github/workflows/repro.yml` — runs the task in CI.
