@@ -12,6 +12,14 @@ jobs:
       - run: moon --version
       - run: ./allowed-to-fail.sh moon run demo:fail-with-random-allowed-to-fail-codes
 
+  via-moon-reported:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - run: mise exec aqua:moonrepo/moon@2.4.2 -- moon --version
+      - run: ./expect-exit-code.sh 1 mise exec aqua:moonrepo/moon@2.4.2 -- moon run demo:fail-with-random-allowed-to-fail-codes
+
   direct:
     runs-on: ubuntu-latest
     steps:
