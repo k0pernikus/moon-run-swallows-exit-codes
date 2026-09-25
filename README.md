@@ -45,11 +45,57 @@ given command and exits `0` iff the command's exit code is `70`/`80`/`90`, propa
   passes while the old version still collapses the code, so it documents the reported behavior without leaving the
   run red.
 
+## Multiple tasks still collapse, and stop each other
+
+moon 2.5.5 propagates a task's code only when `moon run` names exactly one fully qualified target
+([`exec.rs` after #2618](https://github.com/moonrepo/moon/blob/7a7d3e8d5aff5a15ed89b52c64a13c0ff161ea4d/crates/app/src/commands/exec.rs)).
+With two targets, or an unqualified one such as `moon run :test`, any failure exits `1`. moon also stops the whole run
+at the first failed task and kills the tasks still running.
+
+`slow-pass.sh` sleeps 5 seconds, then writes `.slow-pass-finished` and exits `0`. Run it beside the allowed-code task:
+
+```
+$ moon run demo:fail-with-random-allowed-to-fail-codes demo:slow-pass; echo "exit: $?"
+  × Task demo:fail-with-random-allowed-to-fail-codes failed to run.
+  ╰─▶ Process ./fail.sh failed: exit code 90
+exit: 1
+
+$ test -f .slow-pass-finished; echo "exit: $?"
+exit: 1
+```
+
+The allowed code never reaches CI, and `slow-pass` never finishes. Measured locally, two runs: moon exited `1` both
+times and `.slow-pass-finished` was absent both times.
+
+`allowFailure: true` stops the kill, but it maps every failure to `0`:
+
+```
+$ moon run demo:allow-failure-random-allowed-code demo:slow-pass; echo "exit: $?"
+exit: 0
+
+$ moon run demo:allow-failure-genuine-failure demo:slow-pass; echo "exit: $?"
+exit: 0
+```
+
+The allowed code disappears, so CI cannot mark the job as a warning. A genuine failure (`genuine-failure.sh` exits `1`)
+disappears as well, so CI marks it as a pass.
+
+Two more jobs cover this:
+
+- `via-moon-multiple-tasks` runs the two tasks through the allow-list and then asserts that `slow-pass` finished. It
+  stays red until moon can be told which codes are allowed failures, so that a run covering several tasks keeps going
+  past them and still exits a code CI can allow-list.
+- `via-moon-allow-failure` uses `expect-exit-code.sh` to assert that `allowFailure` exits `0` for an allowed code and
+  for a genuine failure alike. It passes, documenting why `allowFailure` cannot express the need.
+
 ## Layout
 
 - `fail.sh` — exits a random `70`/`80`/`90`.
+- `slow-pass.sh` — sleeps 5 seconds, writes `.slow-pass-finished`, exits `0`.
+- `genuine-failure.sh` — exits `1`, a code no allow-list names.
 - `allowed-to-fail.sh` — runs a command, exits `0` iff its code is allow-listed (`70`/`80`/`90`).
 - `expect-exit-code.sh` — runs a command, exits `0` iff its code equals the expected one.
-- `moon.yml`, `.moon/` — the `demo:fail-with-random-allowed-to-fail-codes` task wrapping it.
+- `moon.yml`, `.moon/` — the `demo:*` tasks wrapping those scripts, two of them with `allowFailure: true`.
 - `mise.toml` — pins moon `2.5.5`.
-- `.github/workflows/repro.yml` — the `direct`, `via-moon` and `via-moon-reported` jobs.
+- `.github/workflows/repro.yml` — the `direct`, `via-moon`, `via-moon-reported`, `via-moon-multiple-tasks` and
+  `via-moon-allow-failure` jobs.

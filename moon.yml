@@ -7,3 +7,26 @@ tasks:
     options:
       cache: false
       runFromWorkspaceRoot: true
+
+  slow-pass:
+    command: './slow-pass.sh'
+    toolchain: system
+    options:
+      cache: false
+      runFromWorkspaceRoot: true
+
+  allow-failure-random-allowed-code:
+    command: './fail.sh'
+    toolchain: system
+    options:
+      cache: false
+      runFromWorkspaceRoot: true
+      allowFailure: true
+
+  allow-failure-genuine-failure:
+    command: './genuine-failure.sh'
+    toolchain: system
+    options:
+      cache: false
+      runFromWorkspaceRoot: true
+      allowFailure: true

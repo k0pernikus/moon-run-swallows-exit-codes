@@ -25,3 +25,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: ./allowed-to-fail.sh ./fail.sh
+
+  via-moon-multiple-tasks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - run: moon --version
+      - name: an allowed code from one of two tasks reaches the allow-list
+        run: ./allowed-to-fail.sh moon run demo:fail-with-random-allowed-to-fail-codes demo:slow-pass
+      - name: the sibling task ran to completion
+        if: always()
+        run: test -f .slow-pass-finished
+
+  via-moon-allow-failure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - run: moon --version
+      - name: allowFailure turns an allowed code into exit 0
+        run: ./expect-exit-code.sh 0 moon run demo:allow-failure-random-allowed-code demo:slow-pass
+      - name: allowFailure turns a genuine failure into exit 0 too
+        run: ./expect-exit-code.sh 0 moon run demo:allow-failure-genuine-failure demo:slow-pass
