@@ -26,17 +26,30 @@ jobs:
       - uses: actions/checkout@v4
       - run: ./allowed-to-fail.sh ./fail.sh
 
+  via-moon-each-task:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - run: moon --version
+      - name: tolerated-defect alone exits 64 | 2 = 66
+        run: ./expect-exit-code.sh 66 moon run demo:tolerated-defect
+      - name: skipped alone exits 64 | 4 = 68
+        run: ./expect-exit-code.sh 68 moon run demo:skipped
+      - name: retried alone exits 64 | 8 = 72
+        run: ./expect-exit-code.sh 72 moon run demo:retried
+
   via-moon-multiple-tasks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: jdx/mise-action@v2
       - run: moon --version
-      - name: an allowed code from one of two tasks reaches the allow-list
-        run: ./allowed-to-fail.sh moon run demo:fail-with-random-allowed-to-fail-codes demo:slow-pass
-      - name: the sibling task ran to completion
+      - name: three tasks exit the bitwise OR of their codes, 64 | 2 | 4 | 8 = 78
+        run: ./expect-exit-code.sh 78 moon run demo:tolerated-defect demo:skipped demo:retried
+      - name: every task ran to completion
         if: always()
-        run: test -f .slow-pass-finished
+        run: ./expect-finished.sh tolerated-defect skipped retried
 
   via-moon-allow-failure:
     runs-on: ubuntu-latest
@@ -44,7 +57,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: jdx/mise-action@v2
       - run: moon --version
-      - name: allowFailure turns an allowed code into exit 0
-        run: ./expect-exit-code.sh 0 moon run demo:allow-failure-random-allowed-code demo:slow-pass
+      - name: allowFailure turns the three tolerated codes into exit 0
+        run: ./expect-exit-code.sh 0 moon run demo:tolerated-defect-allow-failure demo:skipped-allow-failure demo:retried-allow-failure
+      - name: allowFailure lets every task run to completion
+        if: always()
+        run: ./expect-finished.sh tolerated-defect skipped retried
       - name: allowFailure turns a genuine failure into exit 0 too
-        run: ./expect-exit-code.sh 0 moon run demo:allow-failure-genuine-failure demo:slow-pass
+        run: ./expect-exit-code.sh 0 moon run demo:allow-failure-genuine-failure demo:tolerated-defect-allow-failure

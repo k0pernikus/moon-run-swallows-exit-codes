@@ -8,19 +8,40 @@ tasks:
       cache: false
       runFromWorkspaceRoot: true
 
-  slow-pass:
-    command: './slow-pass.sh'
+  tolerated-defect:
+    command: './exit-with-signal.sh tolerated-defect 2 1'
     toolchain: system
     options:
       cache: false
       runFromWorkspaceRoot: true
 
-  allow-failure-random-allowed-code:
-    command: './fail.sh'
+  skipped:
+    command: './exit-with-signal.sh skipped 4 3'
     toolchain: system
     options:
       cache: false
       runFromWorkspaceRoot: true
+
+  retried:
+    command: './exit-with-signal.sh retried 8 5'
+    toolchain: system
+    options:
+      cache: false
+      runFromWorkspaceRoot: true
+
+  tolerated-defect-allow-failure:
+    extends: tolerated-defect
+    options:
+      allowFailure: true
+
+  skipped-allow-failure:
+    extends: skipped
+    options:
+      allowFailure: true
+
+  retried-allow-failure:
+    extends: retried
+    options:
       allowFailure: true
 
   allow-failure-genuine-failure:
