@@ -4,63 +4,77 @@ on:
   workflow_dispatch:
 
 jobs:
+  direct:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: an allowed code exited directly reaches the allow-list
+        run: allowed-to-fail random-tolerated-code
+
   via-moon:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: jdx/mise-action@v2
-      - run: moon --version
-      - run: ./allowed-to-fail.sh moon run demo:fail-with-random-allowed-to-fail-codes
+      - uses: ./.github/actions/setup
+      - name: an allowed code from one moon task reaches the allow-list
+        run: allowed-to-fail moon run demo:random-tolerated-code
 
   via-moon-reported:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: jdx/mise-action@v2
+      - uses: ./.github/actions/setup
       - run: mise exec aqua:moonrepo/moon@2.4.2 -- moon --version
-      - run: ./expect-exit-code.sh 1 mise exec aqua:moonrepo/moon@2.4.2 -- moon run demo:fail-with-random-allowed-to-fail-codes
-
-  direct:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: ./allowed-to-fail.sh ./fail.sh
+      - name: moon 2.4.2 collapsed the allowed code to 1
+        run: expect-exit-code 1 mise exec aqua:moonrepo/moon@2.4.2 -- moon run demo:random-tolerated-code
 
   via-moon-each-task:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: jdx/mise-action@v2
-      - run: moon --version
+      - uses: ./.github/actions/setup
       - name: tolerated-defect alone exits 64 | 2 = 66
-        run: ./expect-exit-code.sh 66 moon run demo:tolerated-defect
+        run: expect-exit-code 66 moon run demo:tolerated-defect
       - name: skipped alone exits 64 | 4 = 68
-        run: ./expect-exit-code.sh 68 moon run demo:skipped
+        run: expect-exit-code 68 moon run demo:skipped
       - name: retried alone exits 64 | 8 = 72
-        run: ./expect-exit-code.sh 72 moon run demo:retried
+        run: expect-exit-code 72 moon run demo:retried
 
   via-moon-multiple-tasks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: jdx/mise-action@v2
-      - run: moon --version
+      - uses: ./.github/actions/setup
       - name: three tasks exit the bitwise OR of their codes, 64 | 2 | 4 | 8 = 78
-        run: ./expect-exit-code.sh 78 moon run demo:tolerated-defect demo:skipped demo:retried
+        run: expect-exit-code 78 moon run demo:tolerated-defect demo:skipped demo:retried
       - name: every task ran to completion
         if: always()
-        run: ./expect-finished.sh tolerated-defect skipped retried
+        run: expect-finished tolerated-defect skipped retried
 
   via-moon-allow-failure:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: jdx/mise-action@v2
-      - run: moon --version
+      - uses: ./.github/actions/setup
       - name: allowFailure turns the three tolerated codes into exit 0
-        run: ./expect-exit-code.sh 0 moon run demo:tolerated-defect-allow-failure demo:skipped-allow-failure demo:retried-allow-failure
+        run: expect-exit-code 0 moon run demo:tolerated-defect-allow-failure demo:skipped-allow-failure demo:retried-allow-failure
       - name: allowFailure lets every task run to completion
         if: always()
-        run: ./expect-finished.sh tolerated-defect skipped retried
+        run: expect-finished tolerated-defect skipped retried
       - name: allowFailure turns a genuine failure into exit 0 too
-        run: ./expect-exit-code.sh 0 moon run demo:allow-failure-genuine-failure demo:tolerated-defect-allow-failure
+        run: expect-exit-code 0 moon run demo:allow-failure-genuine-failure demo:tolerated-defect-allow-failure
+
+  via-moon-workaround:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: every task records its bit and exits 0, so moon runs all three and exits 0
+        run: expect-exit-code 0 moon run demo:tolerated-defect-recorded demo:skipped-recorded demo:retried-recorded
+      - name: every task ran to completion
+        run: expect-finished tolerated-defect skipped retried
+      - name: a gate after moon exits 64 | the OR of the recorded bits, 64 | 2 | 4 | 8 = 78
+        run: expect-exit-code 78 fold-recorded-signals
+      - name: a genuine failure still stops the run at the moon line, before the gate
+        run: expect-exit-code 1 moon run demo:genuine-failure demo:skipped-recorded

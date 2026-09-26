@@ -1,2 +1,5 @@
 .moon/cache/
+.venv/
+__pycache__/
 .*-finished
+.*-signal

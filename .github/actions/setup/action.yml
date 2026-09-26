@@ -1,0 +1,12 @@
+name: setup
+description: Install the pinned moon and uv, sync the project and put its console scripts on PATH
+runs:
+  using: composite
+  steps:
+    - uses: jdx/mise-action@v2
+    - run: uv sync --locked
+      shell: bash
+    - run: echo "${PWD}/.venv/bin" >> "${GITHUB_PATH}"
+      shell: bash
+    - run: moon --version
+      shell: bash

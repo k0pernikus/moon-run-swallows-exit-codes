@@ -1,0 +1,8 @@
+line-length = 120
+src = ["src"]
+
+[lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RET", "ISC001", "ISC002"]
+
+[lint.flake8-implicit-str-concat]
+allow-multiline = false

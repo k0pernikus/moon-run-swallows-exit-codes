@@ -1,30 +1,58 @@
-language: bash
+language: python
 
 tasks:
-  fail-with-random-allowed-to-fail-codes:
-    command: './fail.sh'
+  random-tolerated-code:
+    command: 'uv run --no-sync random-tolerated-code'
     toolchain: system
+    inputs: []
     options:
       cache: false
       runFromWorkspaceRoot: true
 
   tolerated-defect:
-    command: './signal-task.sh tolerated-defect 2 1'
+    command: 'uv run --no-sync signal-task exit tolerated-defect 2 1'
     toolchain: system
+    inputs: []
     options:
       cache: false
       runFromWorkspaceRoot: true
 
   skipped:
-    command: './signal-task.sh skipped 4 3'
+    command: 'uv run --no-sync signal-task exit skipped 4 3'
     toolchain: system
+    inputs: []
     options:
       cache: false
       runFromWorkspaceRoot: true
 
   retried:
-    command: './signal-task.sh retried 8 5'
+    command: 'uv run --no-sync signal-task exit retried 8 5'
     toolchain: system
+    inputs: []
+    options:
+      cache: false
+      runFromWorkspaceRoot: true
+
+  tolerated-defect-recorded:
+    command: 'uv run --no-sync signal-task record tolerated-defect 2 1'
+    toolchain: system
+    inputs: []
+    options:
+      cache: false
+      runFromWorkspaceRoot: true
+
+  skipped-recorded:
+    command: 'uv run --no-sync signal-task record skipped 4 3'
+    toolchain: system
+    inputs: []
+    options:
+      cache: false
+      runFromWorkspaceRoot: true
+
+  retried-recorded:
+    command: 'uv run --no-sync signal-task record retried 8 5'
+    toolchain: system
+    inputs: []
     options:
       cache: false
       runFromWorkspaceRoot: true
@@ -44,10 +72,15 @@ tasks:
     options:
       allowFailure: true
 
-  allow-failure-genuine-failure:
-    command: './genuine-failure.sh'
+  genuine-failure:
+    command: 'uv run --no-sync genuine-failure'
     toolchain: system
+    inputs: []
     options:
       cache: false
       runFromWorkspaceRoot: true
+
+  allow-failure-genuine-failure:
+    extends: genuine-failure
+    options:
       allowFailure: true
