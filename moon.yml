@@ -9,21 +9,21 @@ tasks:
       runFromWorkspaceRoot: true
 
   tolerated-defect:
-    command: './exit-with-signal.sh tolerated-defect 2 1'
+    command: './signal-task.sh tolerated-defect 2 1'
     toolchain: system
     options:
       cache: false
       runFromWorkspaceRoot: true
 
   skipped:
-    command: './exit-with-signal.sh skipped 4 3'
+    command: './signal-task.sh skipped 4 3'
     toolchain: system
     options:
       cache: false
       runFromWorkspaceRoot: true
 
   retried:
-    command: './exit-with-signal.sh retried 8 5'
+    command: './signal-task.sh retried 8 5'
     toolchain: system
     options:
       cache: false

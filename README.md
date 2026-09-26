@@ -68,7 +68,7 @@ tolerated something exits `64 | <bits>`. The `64` keeps every tolerated code cle
 to `5`, and bit 0 stays unset, so every tolerated code is even and between `66` and `78`. A CI allow-list names exactly
 those codes.
 
-`exit-with-signal.sh <name> <bit> <seconds>` sleeps, writes `.<name>-finished` and exits `64 | <bit>`. Three tasks use
+`signal-task.sh <name> <bit> <seconds>` sleeps, writes `.<name>-finished` and exits `64 | <bit>`. Three tasks use
 it, each setting one bit and finishing at a different time:
 
 | task               | bit | finishes after | exits |
@@ -86,7 +86,7 @@ skipped finished after 3s, exiting 64 | 4 = 68
 task_runner::run_failed
 
   × Task demo:skipped failed to run.
-  ╰─▶ Process ./exit-with-signal.sh failed: exit code 68
+  ╰─▶ Process ./signal-task.sh failed: exit code 68
 exit: 68
 ```
 
@@ -115,7 +115,7 @@ demo:tolerated-defect | tolerated-defect finished after 1s, exiting 64 | 2 = 66
 task_runner::run_failed
 
   × Task demo:tolerated-defect failed to run.
-  ╰─▶ Process ./exit-with-signal.sh failed: exit code 66
+  ╰─▶ Process ./signal-task.sh failed: exit code 66
 exit: 1
 
 $ ./expect-finished.sh tolerated-defect skipped retried; echo "exit: $?"
@@ -153,7 +153,7 @@ Three more jobs cover this:
 ## Layout
 
 - `fail.sh` — exits a random `70`/`80`/`90`.
-- `exit-with-signal.sh` — sleeps, writes `.<name>-finished`, exits `64 | <bit>`.
+- `signal-task.sh` — sleeps, writes `.<name>-finished`, exits `64 | <bit>`.
 - `genuine-failure.sh` — exits `1`, a code no allow-list names.
 - `allowed-to-fail.sh` — runs a command, exits `0` iff its code is allow-listed (`70`/`80`/`90`).
 - `expect-exit-code.sh` — runs a command, exits `0` iff its code equals the expected one.
