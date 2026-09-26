@@ -4,12 +4,12 @@ from typing import Literal
 
 import rich_click as click
 
-from moon_repro.signals import SIGNAL_EXIT_BASE, exit_code, finished_marker, signal_record
+from moon_repro.signals import as_bits, finished_marker, signal_record
 
 
 @click.command(
-    help="""Sleep SECONDS, write .NAME-finished, then either exit 64 | SIGNAL (mode exit) or record SIGNAL in \
-.NAME-signal and exit 0 (mode record)."""
+    help="""Sleep SECONDS, write .NAME-finished, then either exit SIGNAL (mode exit) or record SIGNAL in .NAME-signal \
+and exit 0 (mode record)."""
 )
 @click.argument("mode", type=click.Choice(["exit", "record"]))
 @click.argument("name")
@@ -21,9 +21,10 @@ def cli(mode: Literal["exit", "record"], name: str, signal: int, seconds: float)
     if mode == "record":
         record = signal_record(name)
         record.write_text(f"{signal}\n", encoding="utf-8")
-        click.echo(f"{name} finished after {seconds:g}s, recorded signal {signal} in {record}", err=True)
+        click.echo(
+            f"{name} finished after {seconds:g}s, recorded signal {signal} ({as_bits(signal)}) in {record}", err=True
+        )
         sys.exit(0)
 
-    code = exit_code(signal)
-    click.echo(f"{name} finished after {seconds:g}s, exiting {SIGNAL_EXIT_BASE} | {signal} = {code}", err=True)
-    sys.exit(code)
+    click.echo(f"{name} finished after {seconds:g}s, exiting {signal} ({as_bits(signal)})", err=True)
+    sys.exit(signal)

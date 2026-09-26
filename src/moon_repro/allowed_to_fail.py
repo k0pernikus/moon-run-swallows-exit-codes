@@ -8,7 +8,7 @@ from moon_repro.trailing_command import PASS_THROUGH, command_argument, exit_cod
 
 @click.command(
     context_settings=PASS_THROUGH,
-    help="""Run COMMAND and exit 0 iff its exit code is a tolerated code (the even codes from 66 to 78), \
+    help="""Run COMMAND and exit 0 iff its exit code is a tolerated code (the even codes from 2 to 14), \
 simulating GitLab's allow_failure: exit_codes; any other code passes through.""",
 )
 @command_argument

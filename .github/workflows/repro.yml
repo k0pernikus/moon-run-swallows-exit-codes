@@ -34,20 +34,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - name: tolerated-defect alone exits 64 | 2 = 66
-        run: expect-exit-code 66 moon run demo:tolerated-defect
-      - name: skipped alone exits 64 | 4 = 68
-        run: expect-exit-code 68 moon run demo:skipped
-      - name: retried alone exits 64 | 8 = 72
-        run: expect-exit-code 72 moon run demo:retried
+      - name: tolerated-defect alone exits 2 (0010)
+        run: expect-exit-code 2 moon run demo:tolerated-defect
+      - name: skipped alone exits 4 (0100)
+        run: expect-exit-code 4 moon run demo:skipped
+      - name: retried alone exits 8 (1000)
+        run: expect-exit-code 8 moon run demo:retried
 
   via-moon-multiple-tasks:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - name: three tasks exit the bitwise OR of their codes, 64 | 2 | 4 | 8 = 78
-        run: expect-exit-code 78 moon run demo:tolerated-defect demo:skipped demo:retried
+      - name: three tasks exit the bitwise OR of their codes, 2 | 4 | 8 = 14 (1110)
+        run: expect-exit-code 14 moon run demo:tolerated-defect demo:skipped demo:retried
       - name: every task ran to completion
         if: always()
         run: expect-finished tolerated-defect skipped retried
@@ -74,7 +74,7 @@ jobs:
         run: expect-exit-code 0 moon run demo:tolerated-defect-recorded demo:skipped-recorded demo:retried-recorded
       - name: every task ran to completion
         run: expect-finished tolerated-defect skipped retried
-      - name: a gate after moon exits 64 | the OR of the recorded bits, 64 | 2 | 4 | 8 = 78
-        run: expect-exit-code 78 fold-recorded-signals
+      - name: a gate after moon exits the OR of the recorded bits, 2 | 4 | 8 = 14 (1110)
+        run: expect-exit-code 14 fold-recorded-signals
       - name: a genuine failure still stops the run at the moon line, before the gate
         run: expect-exit-code 1 moon run demo:genuine-failure demo:skipped-recorded
